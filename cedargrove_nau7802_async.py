@@ -321,26 +321,35 @@ class NAU7802:
         self._adc_out = value / 128  # Restore to 24-bit signed integer value
         return self._adc_out
 
-    async def read_async(self, samples=2):
-        """Read and average consecutive raw sample values. Return average raw value."""
+    async def wait_available_async(self, timeout=1.0):
+        """Wait for ADC data to be available. Raises RuntimeError if no data is
+        ready within timeout seconds (e.g. the device stopped responding or was
+        reset by a brownout) instead of waiting forever."""
+        start_check = time.monotonic()
+        while not self.available():
+            if time.monotonic() - start_check > timeout:
+                raise RuntimeError("NAU7802 data not ready after %.1fs" % timeout)
+            await asyncio.sleep(0)
+
+    async def read_async(self, samples=2, timeout=1.0):
+        """Read and average consecutive raw sample values. Return average raw value.
+        Raises RuntimeError if any sample is not ready within timeout seconds."""
         sample_sum = 0
         sample_count = samples
         while sample_count > 0:
-            while not self.available():
-                await asyncio.sleep(0)
+            await self.wait_available_async(timeout)
             sample_sum = sample_sum + self.read()
             sample_count -= 1
         return int(sample_sum / samples)
 
-    async def read_values_async(self, samples=2):
-        """Read consecutive raw sample values. Return the set of raw value."""
-        samples = []
-        sample_count = samples
-        while sample_count > 0:
-            while not self.available():
-                await asyncio.sleep(0)
-            samples.append(self.read())
-        return samples
+    async def read_values_async(self, samples=2, timeout=1.0):
+        """Read consecutive raw sample values. Return the list of raw values.
+        Raises RuntimeError if any sample is not ready within timeout seconds."""
+        values = []
+        while len(values) < samples:
+            await self.wait_available_async(timeout)
+            values.append(self.read())
+        return values
 
     async def reset_async(self):
         """Resets all device registers and enables digital system power.
@@ -353,9 +362,10 @@ class NAU7802:
         await asyncio.sleep(0.750)  # Wait 750ms; 400ms minimum
         return self._pu_ready
 
-    async def calibrate_async(self, mode="INTERNAL"):
+    async def calibrate_async(self, mode="INTERNAL", timeout=5.0):
         """Perform the calibration procedure. Valid calibration modes
-        are 'INTERNAL', 'OFFSET', and 'GAIN'. True if successful."""
+        are 'INTERNAL', 'OFFSET', and 'GAIN'. True if successful; False if
+        calibration failed or did not complete within timeout seconds."""
         if mode not in dir(CalibrationMode):
             raise ValueError("Invalid Calibration Mode")
         self._calib_mode = mode
@@ -366,6 +376,9 @@ class NAU7802:
         elif self._calib_mode == "GAIN":  # External PGA full-scale gain setting
             self._c2_cal_mode = CalibrationMode.GAIN
         self._c2_cal_start = True
+        start_check = time.monotonic()
         while self._c2_cal_start:
+            if time.monotonic() - start_check > timeout:
+                return False
             await asyncio.sleep(0.010)  # 10ms
         return not self._c2_cal_error
