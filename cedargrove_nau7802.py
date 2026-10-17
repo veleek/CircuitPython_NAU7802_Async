@@ -280,7 +280,7 @@ class NAU7802:
             self._pu_analog = True
             self._pu_digital = True
             time.sleep(0.750)  # Wait 750ms; minimum 400ms
-            self._pu_start = True  # Start acquisition system cycling
+            self._pu_cycle_start = True  # Start acquisition system cycling
             return self._pu_ready
         self._pu_analog = False
         self._pu_digital = False
