@@ -33,18 +33,16 @@ Implementation Notes
 * Adafruit's Register library: https://github.com/adafruit/Adafruit_CircuitPython_Register
 """
 
-import time
-import struct
 import asyncio
+import struct
+import time
 
 from adafruit_bus_device.i2c_device import I2CDevice
-from adafruit_register.i2c_struct import ROUnaryStruct
+from adafruit_register.i2c_bit import ROBit, RWBit
 
 # from adafruit_register.i2c_struct   import UnaryStruct
-from adafruit_register.i2c_bits import RWBits
-from adafruit_register.i2c_bits import ROBits
-from adafruit_register.i2c_bit import RWBit
-from adafruit_register.i2c_bit import ROBit
+from adafruit_register.i2c_bits import ROBits, RWBits
+from adafruit_register.i2c_struct import ROUnaryStruct
 
 __version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/veleek/CircuitPython_NAU7802_Async.git"
@@ -64,7 +62,6 @@ _PWR_CTRL = 0x1C  # Power Control  RW
 _REV_ID = 0x1F  # Chip Revision ID  R-
 
 
-# pylint: disable=too-few-public-methods
 class LDOVoltage:
     """Internal low-dropout voltage regulator settings."""
 
@@ -107,7 +104,6 @@ class CalibrationMode:
 class NAU7802:
     """The primary NAU7802 class."""
 
-    # pylint: disable=too-many-instance-attributes
     @staticmethod
     async def create_async(i2c_bus, address=0x2A, active_channels=1):
         """Instantiate NAU7802; LDO 3v0 volts, gain 128, 10 samples per second
@@ -231,7 +227,7 @@ class NAU7802:
     @ldo_voltage.setter
     def ldo_voltage(self, voltage="EXTERNAL"):
         """Select the LDO Voltage. Valid voltages are '2V4', '2V7', '3V0'."""
-        if not "LDO_" + voltage in dir(LDOVoltage):
+        if not f"LDO_{voltage}" in dir(LDOVoltage):
             raise ValueError("Invalid LDO Voltage")
         self._ldo_voltage = voltage
         if self._ldo_voltage == "2V4":
@@ -248,9 +244,9 @@ class NAU7802:
 
     @gain.setter
     def gain(self, factor=1):
-        """Select PGA gain factor. Valid values are '1, 2, 4, 8, 16, 32, 64,
+        """Select PGA gain factor. Valid values are 1, 2, 4, 8, 16, 32, 64,
         and 128."""
-        if not "GAIN_X" + str(factor) in dir(Gain):
+        if not f"GAIN_X{factor}" in dir(Gain):
             raise ValueError("Invalid Gain Factor")
         self._gain = factor
         if self._gain == 1:
@@ -269,6 +265,28 @@ class NAU7802:
             self._c1_gains = Gain.GAIN_X64
         elif self._gain == 128:
             self._c1_gains = Gain.GAIN_X128
+
+    @property
+    def poll_rate(self):
+        """ADC conversion/polling rate."""
+        return self._c2_conv_rate
+
+    @poll_rate.setter
+    def poll_rate(self, rate=0):
+        """Select polling rate. Valid values are 10, 20, 40, 80, and 320."""
+        if not f"RATE_{rate}SPS" in dir(ConversionRate):
+            raise ValueError("Invalid Conversion Rate")
+        self._rate = rate
+        if self._rate == 10:
+            self._c2_conv_rate = ConversionRate.RATE_10SPS
+        if self._rate == 20:
+            self._c2_conv_rate = ConversionRate.RATE_20SPS
+        if self._rate == 40:
+            self._c2_conv_rate = ConversionRate.RATE_40SPS
+        if self._rate == 80:
+            self._c2_conv_rate = ConversionRate.RATE_80SPS
+        if self._rate == 320:
+            self._c2_conv_rate = ConversionRate.RATE_320SPS
 
     async def enable_async(self, power=True):
         """Enable(start) or disable(stop) the internal analog and digital
