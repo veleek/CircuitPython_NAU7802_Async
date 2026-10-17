@@ -315,9 +315,11 @@ class NAU7802:
         time.sleep(0.750)  # Wait 750ms; 400ms minimum
         return self._pu_ready
 
-    def calibrate(self, mode="INTERNAL"):
+    def calibrate(self, mode="INTERNAL", timeout=5.0):
         """Perform the calibration procedure. Valid calibration modes
-        are 'INTERNAL', 'OFFSET', and 'GAIN'. True if successful."""
+        are 'INTERNAL', 'OFFSET', and 'GAIN'. True if successful; False if
+        calibration failed or did not complete within timeout seconds. Use a
+        timeout of -1 to wait forever."""
         if not mode in dir(CalibrationMode):
             raise ValueError("Invalid Calibration Mode")
         self._calib_mode = mode
@@ -328,6 +330,9 @@ class NAU7802:
         elif self._calib_mode == "GAIN":  # External PGA full-scale gain setting
             self._c2_cal_mode = CalibrationMode.GAIN
         self._c2_cal_start = True
+        start_check = time.monotonic()
         while self._c2_cal_start:
+            if timeout >= 0 and time.monotonic() - start_check >= timeout:
+                return False
             time.sleep(0.010)  # 10ms
         return not self._c2_cal_error
