@@ -251,8 +251,14 @@ class NAU7802:
 
     @property
     def poll_rate(self):
-        """ADC conversion/polling rate."""
-        return self._c2_conv_rate
+        """ADC conversion/polling rate in samples per second."""
+        return {
+            ConversionRate.RATE_10SPS: 10,
+            ConversionRate.RATE_20SPS: 20,
+            ConversionRate.RATE_40SPS: 40,
+            ConversionRate.RATE_80SPS: 80,
+            ConversionRate.RATE_320SPS: 320,
+        }[self._c2_conv_rate]
 
     @poll_rate.setter
     def poll_rate(self, rate=0):
