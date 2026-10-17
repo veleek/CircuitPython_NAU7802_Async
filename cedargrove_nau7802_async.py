@@ -119,7 +119,6 @@ class NAU7802:
         self._act_channels = active_channels
 
         self._enable = False
-        self._pu_start = False
         self._calib_mode = None  # Initialize for later use
         self._adc_out = None  # Initialize for later use
 
@@ -297,7 +296,7 @@ class NAU7802:
             self._pu_analog = True
             self._pu_digital = True
             await asyncio.sleep(0.750)  # Wait 750ms; minimum 400ms
-            self._pu_start = True  # Start acquisition system cycling
+            self._pu_cycle_start = True  # Start acquisition system cycling
             return self._pu_ready
         self._pu_analog = False
         self._pu_digital = False
