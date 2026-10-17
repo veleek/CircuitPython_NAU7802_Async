@@ -8,10 +8,12 @@ Instantiates two NAU7802 channels with default gain of 128 and sample
 average count of 2.
 """
 
-import time
-import datetime
 import asyncio
+import datetime
+import time
+
 import board
+
 from cedargrove_nau7802_async import NAU7802
 
 
@@ -26,8 +28,7 @@ def zero_channel(nau7802: NAU7802, channel: int = 1):
         % (nau7802.channel, nau7802.calibrate_async("INTERNAL"))
     )
     print(
-        "channel %1d calibrate.OFFSET:   %5s"
-        % (nau7802.channel, nau7802.calibrate_async("OFFSET"))
+        "channel %1d calibrate.OFFSET:   %5s" % (nau7802.channel, nau7802.calibrate_async("OFFSET"))
     )
     print("...channel %1d zeroed" % nau7802.channel)
 
@@ -56,17 +57,17 @@ async def simple_test():
     while True:
         print("=====")
         value = await read_raw_value(nau7802, 1)
-        print("channel %1.0f raw value: %7.0f" % (nau7802.channel, value))
+        print(f"channel {nau7802.channel:1.0f} raw value: {value:7.0f}")
 
         value = await read_raw_value(nau7802, 2)
-        print("channel %1.0f raw value: %7.0f" % (nau7802.channel, value))
+        print(f"channel {nau7802.channel:1.0f} raw value: {value:7.0f}")
 
 
 async def clock():
     while True:
-        print("{}: tick".format(datetime.datetime.now()))
+        print(f"{datetime.datetime.now()}: tick")
         await asyncio.sleep(1)
-        print("{}: tock".format(datetime.datetime.now()))
+        print(f"{datetime.datetime.now()}: tock")
         await asyncio.sleep(1)
 
 

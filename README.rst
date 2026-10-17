@@ -1,7 +1,9 @@
 Introduction
 ============
 
-
+.. image:: https://readthedocs.org/projects/circuitpython-nau7802/badge/?version=latest
+    :target: https://docs.circuitpython.org/projects/nau7802/en/latest/
+    :alt: Documentation Status
 
 
 .. image:: https://img.shields.io/discord/327254708534116352.svg
@@ -14,9 +16,9 @@ Introduction
     :alt: Build Status
 
 
-.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
-    :target: https://github.com/psf/black
-    :alt: Code Style: Black
+.. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
+    :target: https://github.com/astral-sh/ruff
+    :alt: Code Style: Ruff
 
 An async CircuitPython driver class for the NAU7802 24-bit ADC.  This is a fork of the original
 `NAU7802 driver <https://github.com/adafruit/CircuitPython_NAU7802>`_ that converts certain operations into
@@ -65,6 +67,13 @@ Or the following command to update an existing version:
 .. code-block:: shell
 
     circup update
+
+Installing for Blinka with Pip
+==============================
+
+.. code-block:: shell
+
+    pip3 install cedargrove-nau7802
 
 Usage Example
 =============
